@@ -11,6 +11,19 @@ import audioop
 import subprocess as sp
 import argparse
 import os
+os.add_dll_directory(os.getcwd())
+# --- INICIO DEL PARCHE PARA PYTHON 3.13 ---
+import ssl
+if not hasattr(ssl, 'wrap_socket'):
+    def parche_ssl(sock, certfile=None, keyfile=None, ssl_version=ssl.PROTOCOL_TLS_CLIENT, **kwargs):
+        ctx = ssl.SSLContext(ssl_version)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        if certfile:
+            ctx.load_cert_chain(certfile, keyfile)
+        return ctx.wrap_socket(sock)
+    ssl.wrap_socket = parche_ssl
+# --- FIN DEL PARCHE ---
 import os.path
 import pymumble_py3 as pymumble
 import pymumble_py3.constants
@@ -36,7 +49,7 @@ class MumbleBot:
 
     def __init__(self, args):
         self.log = logging.getLogger("bot")
-        self.log.info(f"bot: botamusique version {self.get_version()}, starting...")
+        self.log.info(f"bot: botamusique version {self.get_version()} [Corregido por NEB para los WankersMC], starting...")
         signal.signal(signal.SIGINT, self.ctrl_caught)
         self.cmd_handle = {}
 
@@ -870,6 +883,7 @@ if __name__ == '__main__':
 
     util.set_logging_formatter(handler, bot_logger.level)
     bot_logger.addHandler(handler)
+    bot_logger.propagate = False
     logging.getLogger("root").addHandler(handler)
     var.bot_logger = bot_logger
 
